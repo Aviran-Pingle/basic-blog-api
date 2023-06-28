@@ -67,5 +67,18 @@ def update_post(post_id):
     return jsonify(post_to_be_updated)
 
 
+@app.route('/api/posts/search')
+def search_posts():
+    params = request.args
+    matched_posts = set()
+    for field in ['title', 'content']:
+        if field in params:
+            matched_by_field = {tuple(post.items()) for post in POSTS
+                                if params[field] in post[field]}
+            matched_posts = matched_posts.union(matched_by_field)
+
+    return jsonify([dict(post) for post in matched_posts])
+
+
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5002, debug=True)
