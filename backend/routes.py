@@ -8,6 +8,15 @@ bp = Blueprint('routes', __name__)
 
 @bp.route('/api/posts', methods=['GET'])
 def get_posts():
+    """
+    Get all posts or sorted posts based on provided parameters.
+
+    Params:
+        sort (str): The field to sort the posts by.
+        direction (str): The sorting direction ('asc' or 'desc').
+    Returns:
+        List of posts.
+    """
     params = request.args
     if 'sort' in params and 'direction' in params:
         is_valid_vals = auxiliary_functions.check_sorting_params(params)
@@ -23,6 +32,12 @@ def get_posts():
 
 @bp.route('/api/posts', methods=['POST'])
 def add_post():
+    """
+    Add a new post.
+    Get the JSON object representing the new post from the request body.
+    Returns:
+        The newly added post.
+    """
     new_post = request.get_json()
 
     if missing_fields := auxiliary_functions.validate_post_data(new_post):
@@ -37,6 +52,14 @@ def add_post():
 
 @bp.route('/api/posts/<int:post_id>', methods=['DELETE'])
 def delete_post(post_id):
+    """
+    Delete a post by ID.
+
+    Param:
+        post_id (int): The ID of the post to be deleted.
+    Returns:
+        A success message if the post is deleted.
+    """
     post_to_be_deleted = auxiliary_functions.find_post_by_id(app.POSTS,
                                                              post_id)
     if not post_to_be_deleted:
@@ -50,6 +73,16 @@ def delete_post(post_id):
 
 @bp.route('/api/posts/<int:post_id>', methods=['PUT'])
 def update_post(post_id):
+    """
+    Update a post by ID.
+    Get the JSON object representing the updated post data from the
+    request body.
+
+    Param:
+        post_id (int): The ID of the post to be updated.
+    Returns:
+        The updated post.
+    """
     post_to_be_updated = auxiliary_functions.find_post_by_id(app.POSTS,
                                                              post_id)
     if not post_to_be_updated:
@@ -62,6 +95,15 @@ def update_post(post_id):
 
 @bp.route('/api/posts/search')
 def search_posts():
+    """
+    Search posts based on provided search parameters.
+
+    Params:
+        title (str, optional): The title keyword to search for.
+        content (str, optional): The content keyword to search for.
+    Returns:
+        List of posts that match the search criteria.
+    """
     params = request.args
     matched_posts = set()
     for field in ['title', 'content']:
