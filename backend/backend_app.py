@@ -25,8 +25,29 @@ def find_post_by_id(posts: list[dict], post_id: int):
             return post
 
 
+def get_sorted_posts(sorting_fields):
+    rev = sorting_fields['direction'] == 'desc'
+    return sorted(POSTS, key=lambda post: post[sorting_fields['sort']],
+                  reverse=rev)
+
+
+def check_sorting_params(sorting_fields):
+    return (sorting_fields['sort'] in ['title', 'content']
+            and sorting_fields['direction'] in ['asc', 'desc'])
+
+
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
+    params = request.args
+    if 'sort' in params and 'direction' in params:
+        is_valid_vals = check_sorting_params(params)
+        if not is_valid_vals:
+            return jsonify({'error': 'wrong sorting param value'}), 400
+        return jsonify(get_sorted_posts(params))
+
+    if 'sort' in params or 'direction' in params:
+        return jsonify({'error': 'missing one sorting param'}), 400
+
     return jsonify(POSTS)
 
 
