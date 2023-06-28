@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+import auxiliary_functions
+
 app = Flask(__name__)
 CORS(app)  # This will enable CORS for all routes
 
@@ -10,40 +12,14 @@ POSTS = [
 ]
 
 
-def validate_post_data(post: dict):
-    fields = ['title', 'content']
-    missing_fields = []
-    for field in fields:
-        if not post.get(field) or field not in post:
-            missing_fields.append(field)
-    return ' and '.join(missing_fields)
-
-
-def find_post_by_id(posts: list[dict], post_id: int):
-    for post in posts:
-        if post['id'] == post_id:
-            return post
-
-
-def get_sorted_posts(sorting_fields):
-    rev = sorting_fields['direction'] == 'desc'
-    return sorted(POSTS, key=lambda post: post[sorting_fields['sort']],
-                  reverse=rev)
-
-
-def check_sorting_params(sorting_fields):
-    return (sorting_fields['sort'] in ['title', 'content']
-            and sorting_fields['direction'] in ['asc', 'desc'])
-
-
 @app.route('/api/posts', methods=['GET'])
 def get_posts():
     params = request.args
     if 'sort' in params and 'direction' in params:
-        is_valid_vals = check_sorting_params(params)
+        is_valid_vals = auxiliary_functions.check_sorting_params(params)
         if not is_valid_vals:
             return jsonify({'error': 'wrong sorting param value'}), 400
-        return jsonify(get_sorted_posts(params))
+        return jsonify(auxiliary_functions.get_sorted_posts(params, POSTS))
 
     if 'sort' in params or 'direction' in params:
         return jsonify({'error': 'missing one sorting param'}), 400
@@ -55,7 +31,7 @@ def get_posts():
 def add_post():
     new_post = request.get_json()
 
-    if missing_fields := validate_post_data(new_post):
+    if missing_fields := auxiliary_functions.validate_post_data(new_post):
         return jsonify({'error': f'Missing {missing_fields}'}), 400
 
     new_id = max(post['id'] for post in POSTS) + 1 if POSTS else 1
@@ -67,7 +43,7 @@ def add_post():
 
 @app.route('/api/posts/<int:post_id>', methods=['DELETE'])
 def delete_post(post_id):
-    post_to_be_deleted = find_post_by_id(POSTS, post_id)
+    post_to_be_deleted = auxiliary_functions.find_post_by_id(POSTS, post_id)
     if not post_to_be_deleted:
         return jsonify({'error': f'Post with id {post_id} not found'}), 404
 
@@ -79,7 +55,7 @@ def delete_post(post_id):
 
 @app.route('/api/posts/<int:post_id>', methods=['PUT'])
 def update_post(post_id):
-    post_to_be_updated = find_post_by_id(POSTS, post_id)
+    post_to_be_updated = auxiliary_functions.find_post_by_id(POSTS, post_id)
     if not post_to_be_updated:
         return jsonify({'error': f'Post with id {post_id} not found'}), 404
 
